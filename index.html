@@ -1,44 +1,95 @@
+<!DOCTYPE html>
 <html>
 <head>
-  <title>AR.js GPS Dinâmico</title>
+    <meta charset="utf-8">
+    <title>AR.js GPS Example</title>
 
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/three.js/build/ar-threex-location-only.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/three.js/build/ar-threex-location-only.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 999;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+    </style>
 </head>
 
 <body>
-  <a-scene
-    vr-mode-ui="enabled: false"
-    arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false">
+    <div id="status">Obtendo localização...</div>
 
-    <a-camera gps-new-camera></a-camera>
+    <a-scene
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false"
+        renderer="antialias: true; alpha: true">
 
-  </a-scene>
+        <a-camera gps-new-camera="gpsMinDistance: 5"></a-camera>
 
-  <script>
-    navigator.geolocation.getCurrentPosition((position) => {
+    </a-scene>
 
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
+    <script>
+        const statusDiv = document.getElementById("status");
 
-      console.log(latitude, longitude);
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
 
-      const box = document.createElement("a-entity");
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
 
-      box.setAttribute("geometry", "primitive: box");
-      box.setAttribute("material", "color: red");
-      box.setAttribute("scale", "10 10 10");
+                // Aproximadamente 5 metros ao norte
+                const objectLatitude = latitude + 0.00005;
+                const objectLongitude = longitude;
 
-      box.setAttribute(
-        "gps-new-entity-place",
-        `latitude: ${latitude}; longitude: ${longitude}`
-      );
+                statusDiv.innerHTML =
+                    `Latitude: ${latitude}<br>` +
+                    `Longitude: ${longitude}`;
 
-      document.querySelector("a-scene").appendChild(box);
+                const box = document.createElement("a-entity");
 
-    });
-  </script>
+                box.setAttribute("geometry", "primitive: box");
+                box.setAttribute("material", "color: red");
+                box.setAttribute("scale", "5 5 5");
+
+                box.setAttribute(
+                    "gps-new-entity-place",
+                    `latitude: ${objectLatitude}; longitude: ${objectLongitude}`
+                );
+
+                document.querySelector("a-scene").appendChild(box);
+
+                console.log("Usuário:", latitude, longitude);
+                console.log("Objeto:", objectLatitude, objectLongitude);
+
+                statusDiv.innerHTML +=
+                    "<br><br>Cubo criado aproximadamente 5m à frente.";
+            },
+
+            function(error) {
+                console.error(error);
+
+                statusDiv.innerHTML =
+                    "Erro ao obter localização: " + error.message;
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    </script>
 </body>
 </html>
 
